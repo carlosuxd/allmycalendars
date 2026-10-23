@@ -1,0 +1,28 @@
+appId: com.carlos.allmycalendars
+productName: All My Calendars
+directories:
+  buildResources: build
+  output: dist
+files:
+  - out/**
+  - package.json
+  - resources/**
+win:
+  target: nsis
+nsis:
+  # One-click: running a newer Setup just updates the installed app (no wizard)
+  oneClick: true
+  # Per-user install, no admin prompt
+  perMachine: false
+  # Reopen the app after installing or updating
+  runAfterFinish: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: All My Calendars
+  # Accounts and settings in %APPDATA% are never removed
+  deleteAppDataOnUninstall: false
+mac:
+  target: dmg
+  category: public.app-category.productivity
+asarUnpack:
+  - resources/**
