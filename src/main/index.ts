@@ -6,7 +6,7 @@ import * as store from './store'
 import * as notifier from './notifier'
 import * as tray from './tray'
 import { loadWeek } from './events'
-import type { Settings } from '@shared/types'
+import type { AccountChanges, Settings } from '@shared/types'
 import icon from '../../resources/icon.png?asset'
 
 const FOCUS_REFRESH_MIN_GAP_MS = 60 * 1000
@@ -113,10 +113,17 @@ ipcMain.handle('addAccount', async () => {
   syncNow()
   return account
 })
+ipcMain.handle('cancelSignIn', () => auth.cancelSignIn())
+ipcMain.handle('reopenSignIn', () => auth.reopenSignIn())
 ipcMain.handle('removeAccount', (_e, email: string) => {
   auth.forget(email)
   store.removeAccount(email)
   syncNow()
+})
+ipcMain.handle('updateAccount', (_e, email: string, changes: AccountChanges) => {
+  store.updateAccount(email, changes)
+  tray.update()
+  return store.getAccounts()
 })
 ipcMain.handle('getCalendars', () => store.getCalendars())
 ipcMain.handle('refreshCalendars', () => google.refreshAllCalendars())

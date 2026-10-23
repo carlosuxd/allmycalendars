@@ -23,6 +23,9 @@ const shown = new Set<Notification>()
 
 const startMs = (e: CalendarEvent): number => new Date(e.start).getTime()
 
+/** The account's label if it has one, otherwise its email */
+const accountName = (email: string): string => store.getAccounts().find((a) => a.email === email)?.label ?? email
+
 export async function sync(force = true): Promise<void> {
   if (!store.getAccounts().length) {
     upcoming = []
@@ -79,7 +82,7 @@ function check(): void {
     const time = new Date(start).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
     show(
       `${e.title} ${relative(Math.round((start - now) / 60_000))}`,
-      `${time} · ${e.calendarName} (${e.accountEmail})${e.meetingLink ? '\nClick to see details and join' : ''}`,
+      `${time} · ${e.calendarName} (${accountName(e.accountEmail)})${e.meetingLink ? '\nClick to see details and join' : ''}`,
       () => opts.openEvent(e.key, e.start)
     )
   }

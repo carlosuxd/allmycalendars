@@ -4,6 +4,7 @@ A small desktop app (Windows + macOS) that shows the Google Calendars from all y
 
 - Sign in to as many Google accounts as you like (through your browser; the app never sees your password)
 - Turn individual calendars on/off
+- Give each account a label (e.g. "Work") and pick its dot color in ⚙ Settings → Manage accounts
 - Weekly grid with all-day row, "now" line, and a "Next meeting" card with a Join button
 - Event details: time, location, guests and RSVPs, description, meeting link
 - The same meeting appearing in several of your accounts is shown once

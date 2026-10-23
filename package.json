@@ -1,7 +1,7 @@
 {
   "name": "all-my-calendars",
   "productName": "All My Calendars",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "All your Google calendars in one weekly view",
   "main": "./out/main/index.js",
   "author": "Carlos Collazos",

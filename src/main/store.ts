@@ -1,7 +1,7 @@
 import { app, safeStorage } from 'electron'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
-import type { Account, CalendarInfo, EventsResult, Settings } from '@shared/types'
+import type { Account, AccountChanges, CalendarInfo, EventsResult, Settings } from '@shared/types'
 
 interface StoredAccount extends Account {
   /** Refresh token, encrypted with the OS keychain (base64) */
@@ -48,7 +48,7 @@ function save(): void {
 }
 
 export function getAccounts(): Account[] {
-  return load().accounts.map(({ email, color }) => ({ email, color }))
+  return load().accounts.map(({ email, color, label }) => ({ email, color, ...(label ? { label } : {}) }))
 }
 
 export function getRefreshToken(email: string): string | null {
@@ -70,6 +70,21 @@ export function saveAccount(email: string, refreshToken: string): Account {
   }
   save()
   return getAccounts().find((a) => a.email === email)!
+}
+
+const LABEL_MAX = 30
+
+/** Sets an account's label (empty removes it) and/or dot color (#rrggbb only). */
+export function updateAccount(email: string, changes: AccountChanges): void {
+  const acc = load().accounts.find((a) => a.email === email)
+  if (!acc) return
+  if (changes.label !== undefined) {
+    const label = changes.label.trim().slice(0, LABEL_MAX).trim()
+    if (label) acc.label = label
+    else delete acc.label
+  }
+  if (changes.color !== undefined && /^#[0-9a-f]{6}$/i.test(changes.color)) acc.color = changes.color.toLowerCase()
+  save()
 }
 
 export function removeAccount(email: string): void {

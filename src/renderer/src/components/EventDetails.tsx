@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { JSX } from 'react'
 import { ArrowSquareOutIcon, CheckIcon, CopyIcon, XIcon } from '@phosphor-icons/react'
-import type { CalendarEvent } from '@shared/types'
+import type { Account, CalendarEvent } from '@shared/types'
+import { accountFullName, accountName } from '../accounts'
 import { fmtRange } from '../dates'
 import { accountDotColor, useDarkMode } from '../color'
 
@@ -78,14 +79,14 @@ function MeetingLink({ url }: { url: string }): JSX.Element {
 
 interface Props {
   event: CalendarEvent
-  /** The account's color, as shown in the sidebar */
-  accountColor: string
+  /** The event's account (for its dot color and label) */
+  account?: Account
   /** Show over the calendar instead of beside it (narrow windows) */
   overlay?: boolean
   onClose(): void
 }
 
-export function EventDetails({ event: e, accountColor, overlay, onClose }: Props): JSX.Element {
+export function EventDetails({ event: e, account, overlay, onClose }: Props): JSX.Element {
   const dark = useDarkMode()
   const open = (url: string) => () => void window.api.openExternal(url)
   return (
@@ -98,10 +99,10 @@ export function EventDetails({ event: e, accountColor, overlay, onClose }: Props
       <div className="details-title">
         <span
           className="account-dot details-dot"
-          style={{ background: accountDotColor(accountColor, dark) }}
+          style={{ background: accountDotColor(account?.color ?? e.color, dark) }}
           role="img"
-          aria-label={`Account: ${e.accountEmail}`}
-          title={e.accountEmail}
+          aria-label={`Account: ${accountFullName(account, e.accountEmail)}`}
+          title={accountFullName(account, e.accountEmail)}
         />
         <h2>{e.title}</h2>
       </div>
@@ -119,7 +120,7 @@ export function EventDetails({ event: e, accountColor, overlay, onClose }: Props
       <dl>
         <dt>Calendar</dt>
         <dd>
-          {e.calendarName}
+          {account?.label ? `${e.calendarName} · ${accountName(account, e.accountEmail)}` : e.calendarName}
           <div className="muted small">{e.accountEmail}</div>
           {e.alsoIn.length > 0 && <div className="muted small">Also in {e.alsoIn.join(', ')}</div>}
         </dd>

@@ -1,6 +1,16 @@
+/** Error message when the user cancels a sign-in that is waiting for the browser */
+export const SIGN_IN_CANCELLED = 'Sign-in cancelled'
+
 export interface Account {
   email: string
   color: string
+  /** Optional name shown instead of the email, e.g. "Work" */
+  label?: string
+}
+
+export interface AccountChanges {
+  label?: string
+  color?: string
 }
 
 export interface CalendarInfo {
@@ -66,6 +76,11 @@ export interface AppInfo {
 
 export interface Api {
   getAccounts(): Promise<Account[]>
+  updateAccount(email: string, changes: AccountChanges): Promise<Account[]>
+  /** Stop waiting for a browser sign-in (e.g. the Google tab was closed) */
+  cancelSignIn(): Promise<void>
+  /** Open the waiting sign-in's Google page again */
+  reopenSignIn(): Promise<void>
   addAccount(): Promise<Account>
   removeAccount(email: string): Promise<void>
   getCalendars(): Promise<CalendarInfo[]>

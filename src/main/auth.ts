@@ -4,7 +4,7 @@ import type { AddressInfo } from 'net'
 import { randomBytes } from 'crypto'
 import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library'
 import * as store from './store'
-import type { Account } from '@shared/types'
+import { SIGN_IN_CANCELLED, type Account } from '@shared/types'
 
 const CLIENT_ID = import.meta.env.MAIN_VITE_GOOGLE_CLIENT_ID as string | undefined
 // For "Desktop app" OAuth clients Google treats the secret as non-confidential.
@@ -49,8 +49,23 @@ const page = (title: string, body: string): string =>
  * Signs in a Google account using the system browser, PKCE and a loopback
  * redirect, as Google recommends for desktop apps.
  */
+/** The sign-in currently waiting for the browser, if any. */
+let pending: { url: string; cancel(): void } | null = null
+
+/** Stops waiting for the browser (e.g. the Google tab was closed). */
+export function cancelSignIn(): void {
+  pending?.cancel()
+}
+
+/** Opens the Google sign-in page of the waiting sign-in again. */
+export function reopenSignIn(): void {
+  if (pending) void shell.openExternal(pending.url)
+}
+
 export async function signIn(): Promise<Account> {
   if (!isConfigured()) throw new Error('Google client ID is not configured. See README.md.')
+  // Only one sign-in at a time
+  pending?.cancel()
 
   const state = randomBytes(16).toString('hex')
   const server = createServer()
@@ -58,10 +73,15 @@ export async function signIn(): Promise<Account> {
   const redirectUri = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
   const client = newClient(redirectUri)
   const { codeVerifier, codeChallenge } = await client.generateCodeVerifierAsync()
+  // This sign-in's entry; a newer sign-in may replace `pending` while this one winds down
+  let mine: typeof pending = null
 
   try {
     const code = await new Promise<string>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('Sign-in timed out')), SIGN_IN_TIMEOUT_MS)
+      const timer = setTimeout(
+        () => reject(new Error('Sign-in timed out. Click Add Google account to try again.')),
+        SIGN_IN_TIMEOUT_MS
+      )
       server.on('request', (req, res) => {
         const url = new URL(req.url ?? '/', redirectUri)
         if (url.pathname !== '/') {
@@ -74,24 +94,33 @@ export async function signIn(): Promise<Account> {
         if (error || !got || url.searchParams.get('state') !== state) {
           res.end(page('Sign-in failed', 'You can close this tab and try again.'))
           clearTimeout(timer)
-          reject(new Error(error ?? 'Sign-in was cancelled'))
+          // Clicking Cancel on Google's page is a cancellation, not an error
+          reject(new Error(!error || error === 'access_denied' ? SIGN_IN_CANCELLED : error))
           return
         }
         res.end(page('Signed in', 'You can close this tab and return to All My Calendars.'))
         clearTimeout(timer)
         resolve(got)
       })
-      void shell.openExternal(
-        client.generateAuthUrl({
-          access_type: 'offline',
-          prompt: 'consent select_account', // always returns a refresh token and lets you pick the account
-          scope: SCOPES,
-          state,
-          code_challenge: codeChallenge,
-          code_challenge_method: CodeChallengeMethod.S256
-        })
-      )
+      const url = client.generateAuthUrl({
+        access_type: 'offline',
+        prompt: 'consent select_account', // always returns a refresh token and lets you pick the account
+        scope: SCOPES,
+        state,
+        code_challenge: codeChallenge,
+        code_challenge_method: CodeChallengeMethod.S256
+      })
+      // The app can't tell when the browser tab is closed, so the window offers Cancel
+      pending = mine = {
+        url,
+        cancel: () => {
+          clearTimeout(timer)
+          reject(new Error(SIGN_IN_CANCELLED))
+        }
+      }
+      void shell.openExternal(url)
     })
+    if (pending === mine) pending = null
 
     const { tokens } = await client.getToken({ code, codeVerifier })
     if (!tokens.refresh_token) throw new Error('Google did not return a refresh token')
@@ -105,6 +134,7 @@ export async function signIn(): Promise<Account> {
     clients.delete(email)
     return store.saveAccount(email, tokens.refresh_token)
   } finally {
+    if (pending === mine) pending = null
     server.close()
   }
 }

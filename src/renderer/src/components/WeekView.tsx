@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties, JSX } from 'react'
 import { VideoCameraIcon } from '@phosphor-icons/react'
-import type { CalendarEvent } from '@shared/types'
+import type { Account, CalendarEvent } from '@shared/types'
+import { accountFullName } from '../accounts'
 import { DAY_MS, eventEnd, eventStart, fmtTime, sameDay } from '../dates'
 import { accountDotColor, chipColors, eventColors, useDarkMode } from '../color'
 
@@ -51,8 +52,8 @@ function layoutDay(events: CalendarEvent[], day: Date): Placed[] {
 }
 
 /** Shows which account an item belongs to, in that account's sidebar color. */
-function AccountDot({ email }: { email: string }): JSX.Element {
-  return <span className="account-dot" role="img" aria-label={`Account: ${email}`} title={email} />
+function AccountDot({ name }: { name: string }): JSX.Element {
+  return <span className="account-dot" role="img" aria-label={`Account: ${name}`} title={name} />
 }
 
 function MeetIcon(): JSX.Element {
@@ -67,14 +68,15 @@ interface Props {
   /** The days to show, in order (2–7) */
   days: Date[]
   events: CalendarEvent[]
-  /** Account email → its color, as shown in the sidebar */
-  accountColors: Record<string, string>
+  /** The signed-in accounts, for each item's dot color and account name */
+  accounts: Account[]
   selectedKey?: string
   onSelect(e: CalendarEvent): void
 }
 
-export function WeekView({ days, events, accountColors, selectedKey, onSelect }: Props): JSX.Element {
-  const accountColor = (e: CalendarEvent): string => accountColors[e.accountEmail] ?? e.color
+export function WeekView({ days, events, accounts, selectedKey, onSelect }: Props): JSX.Element {
+  const accountOf = (e: CalendarEvent): Account | undefined => accounts.find((a) => a.email === e.accountEmail)
+  const accountColor = (e: CalendarEvent): string => accountOf(e)?.color ?? e.color
   const [now, setNow] = useState(new Date())
   const scroller = useRef<HTMLDivElement>(null)
   const dark = useDarkMode()
@@ -121,7 +123,7 @@ export function WeekView({ days, events, accountColors, selectedKey, onSelect }:
                     onClick={() => onSelect(e)}
                     title={e.title}
                   >
-                    <AccountDot email={e.accountEmail} />
+                    <AccountDot name={accountFullName(accountOf(e), e.accountEmail)} />
                     <span className="chip-title">{e.title}</span>
                   </button>
                 )
@@ -176,7 +178,7 @@ export function WeekView({ days, events, accountColors, selectedKey, onSelect }:
                       onClick={() => onSelect(e)}
                     >
                       <span className="event-title">
-                        <AccountDot email={e.accountEmail} />
+                        <AccountDot name={accountFullName(accountOf(e), e.accountEmail)} />
                         {e.title}
                       </span>
                       {compact ? (

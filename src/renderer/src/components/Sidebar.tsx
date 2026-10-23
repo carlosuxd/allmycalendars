@@ -87,9 +87,16 @@ export function Sidebar(p: Props): JSX.Element {
                   {open ? <CaretDownIcon size={12} weight="bold" /> : <CaretRightIcon size={12} weight="bold" />}
                 </span>
                 <span className="dot" style={{ background: accountDotColor(a.color, dark) }} />
-                <span className="email" title={a.email}>
-                  {a.email}
-                </span>
+                {a.label ? (
+                  <span className="account-text" title={a.email}>
+                    <span className="label-line">{a.label}</span>
+                    <span className="email-line">{a.email}</span>
+                  </span>
+                ) : (
+                  <span className="email" title={a.email}>
+                    {a.email}
+                  </span>
+                )}
               </button>
             </div>
             {open && (

@@ -9,11 +9,12 @@ import {
   SidebarSimpleIcon,
   XIcon
 } from '@phosphor-icons/react'
-import type { Account, CalendarEvent, CalendarInfo, EventsResult } from '@shared/types'
+import { SIGN_IN_CANCELLED, type Account, type AccountChanges, type CalendarEvent, type CalendarInfo, type EventsResult } from '@shared/types'
 import { addDays, eventEnd, eventStart, fmtRangeTitle, startOfDay, startOfWeek } from './dates'
 import { Sidebar } from './components/Sidebar'
 import { WeekView } from './components/WeekView'
 import { EventDetails } from './components/EventDetails'
+import { SignInWaiting } from './components/SignInWaiting'
 import { SettingsView, type SettingsSection } from './components/settings/SettingsView'
 
 /** Narrowest a day column may get before a day is dropped */
@@ -185,7 +186,6 @@ export function App(): JSX.Element {
     return () => document.removeEventListener('keydown', onKey)
   }, [settingsOpen, sidebarOpen])
 
-  const accountColors = useMemo(() => Object.fromEntries(accounts.map((a) => [a.email, a.color])), [accounts])
 
   const nextEvent = useMemo(() => {
     const now = new Date()
@@ -201,10 +201,21 @@ export function App(): JSX.Element {
       await window.api.addAccount()
       await loadAccounts()
     } catch (err) {
-      setError(String((err as Error).message).replace(/^Error invoking remote method '\w+': (Error: )?/, ''))
+      const message = String((err as Error).message).replace(/^Error invoking remote method '\w+': (Error: )?/, '')
+      // Cancelling is the user's choice, not an error
+      if (message !== SIGN_IN_CANCELLED) setError(message)
     } finally {
       setAdding(false)
     }
+  }
+
+  /** Stop waiting for the browser; the pending addAccount() then finishes and resets the button */
+  const cancelAdd = (): void => void window.api.cancelSignIn()
+  const reopenSignIn = (): void => void window.api.reopenSignIn()
+
+  /** Label or dot color changed in Settings; the sidebar and calendar update right away */
+  const updateAccount = async (email: string, changes: AccountChanges): Promise<void> => {
+    setAccounts(await window.api.updateAccount(email, changes))
   }
 
   const removeAccount = async (email: string): Promise<void> => {
@@ -332,9 +343,13 @@ export function App(): JSX.Element {
           <div className="empty">
             <h1>Bring all your calendars together</h1>
             <p>Add each of your Google accounts. You'll sign in through your browser; your password never touches this app.</p>
-            <button className="join" onClick={addAccount} disabled={adding}>
-              {adding ? 'Waiting for browser sign-in…' : 'Add Google account'}
-            </button>
+            {adding ? (
+              <SignInWaiting onReopen={reopenSignIn} onCancel={cancelAdd} />
+            ) : (
+              <button className="join" onClick={addAccount}>
+                Add Google account
+              </button>
+            )}
             <button className="privacy-link" onClick={() => openSettings('privacy')}>
               <LockSimpleIcon size={12} aria-hidden /> How we protect your privacy
             </button>
@@ -345,7 +360,7 @@ export function App(): JSX.Element {
               <WeekView
                 days={days}
                 events={result?.events ?? []}
-                accountColors={accountColors}
+                accounts={accounts}
                 selectedKey={selected?.key}
                 onSelect={setSelected}
               />
@@ -353,7 +368,7 @@ export function App(): JSX.Element {
             {selected && (
               <EventDetails
                 event={selected}
-                accountColor={accountColors[selected.accountEmail] ?? selected.color}
+                account={accounts.find((a) => a.email === selected.accountEmail)}
                 overlay={!detailsInline}
                 onClose={() => setSelected(null)}
               />
@@ -372,6 +387,9 @@ export function App(): JSX.Element {
           accountError={error}
           onAddAccount={addAccount}
           onRemoveAccount={removeAccount}
+          onUpdateAccount={updateAccount}
+          onCancelAdd={cancelAdd}
+          onReopenSignIn={reopenSignIn}
         />
       )}
     </div>
