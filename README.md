@@ -114,4 +114,6 @@ Removing an account in the app deletes its token. To fully revoke access, also r
 
 ## Credits
 
+Designed and created by **Carlos Collazos**, Senior Product Designer.
+
 Icons by [Phosphor Icons](https://phosphoricons.com) (MIT license).
