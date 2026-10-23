@@ -1,13 +1,22 @@
 import { useEffect, useState } from 'react'
 import type { JSX } from 'react'
-import { ArrowLeftIcon, BellIcon, GearSixIcon, ShieldCheckIcon, UserCircleIcon, type Icon } from '@phosphor-icons/react'
+import {
+  ArrowLeftIcon,
+  BellIcon,
+  GearSixIcon,
+  InfoIcon,
+  ShieldCheckIcon,
+  UserCircleIcon,
+  type Icon
+} from '@phosphor-icons/react'
 import type { Settings } from '@shared/types'
 import { GeneralSection } from './GeneralSection'
 import { NotificationsSection } from './NotificationsSection'
 import { PrivacySection } from './PrivacySection'
+import { AboutSection } from './AboutSection'
 import { AccountsSection, type AccountsProps } from './AccountsSection'
 
-export type SettingsSection = 'general' | 'accounts' | 'notifications' | 'privacy'
+export type SettingsSection = 'general' | 'accounts' | 'notifications' | 'privacy' | 'about'
 
 export interface SectionProps {
   settings: Settings
@@ -18,7 +27,8 @@ const SECTIONS: { id: SettingsSection; label: string; icon: Icon }[] = [
   { id: 'general', label: 'General', icon: GearSixIcon },
   { id: 'accounts', label: 'Manage accounts', icon: UserCircleIcon },
   { id: 'notifications', label: 'Notifications', icon: BellIcon },
-  { id: 'privacy', label: 'Privacy', icon: ShieldCheckIcon }
+  { id: 'privacy', label: 'Privacy', icon: ShieldCheckIcon },
+  { id: 'about', label: 'About', icon: InfoIcon }
 ]
 
 interface Props extends AccountsProps {
@@ -75,6 +85,8 @@ export function SettingsView({ section, onSection, onClose, ...accountProps }: P
               <AccountsSection {...accountProps} onOpenPrivacy={() => onSection('privacy')} />
             ) : section === 'privacy' ? (
               <PrivacySection />
+            ) : section === 'about' ? (
+              <AboutSection />
             ) : settings ? (
               section === 'general' ? (
                 <GeneralSection settings={settings} change={change} />

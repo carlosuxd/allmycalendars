@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
 import type { JSX } from 'react'
-import type { AppInfo, Settings } from '@shared/types'
+import type { Settings } from '@shared/types'
 import type { SectionProps } from './SettingsView'
 
 const THEMES: { id: Settings['theme']; label: string }[] = [
@@ -10,11 +9,6 @@ const THEMES: { id: Settings['theme']; label: string }[] = [
 ]
 
 export function GeneralSection({ settings, change }: SectionProps): JSX.Element {
-  const [info, setInfo] = useState<AppInfo | null>(null)
-  useEffect(() => {
-    void window.api.getAppInfo().then(setInfo)
-  }, [])
-
   return (
     <>
       <h2>General</h2>
@@ -70,15 +64,6 @@ export function GeneralSection({ settings, change }: SectionProps): JSX.Element 
             onChange={(e) => void change({ keepInTray: e.target.checked })}
           />
         </label>
-      </section>
-
-      <section className="setting-group">
-        <div className="setting">
-          <div>
-            <div className="setting-label">About</div>
-            <div className="muted small">All My Calendars {info ? info.version : ''}</div>
-          </div>
-        </div>
       </section>
     </>
   )
