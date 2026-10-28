@@ -1,7 +1,7 @@
 {
   "name": "all-my-calendars",
   "productName": "All My Calendars",
-  "version": "0.1.5",
+  "version": "0.1.15",
   "description": "All your Google calendars in one weekly view",
   "main": "./out/main/index.js",
   "author": "Carlos Collazos",
@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "start": "electron-vite preview",
     "build:win": "npm version patch --no-git-tag-version && npm run build && electron-builder --win",
-    "build:mac": "npm version patch --no-git-tag-version && npm run build && electron-builder --mac"
+    "build:mac": "npm version patch --no-git-tag-version && npm run build && APPLE_KEYCHAIN_PROFILE=allmycalendars-notary electron-builder --mac"
   },
   "dependencies": {
     "@googleapis/calendar": "^20.1.0",

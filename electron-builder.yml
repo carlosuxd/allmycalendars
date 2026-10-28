@@ -24,5 +24,12 @@ nsis:
 mac:
   target: dmg
   category: public.app-category.productivity
+  # Developer ID Application certificate (must be in the login keychain)
+  identity: "Carlos Collazos (85TS9FR52Q)"
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  # Credentials come from the APPLE_KEYCHAIN_PROFILE set in the build:mac script
+  notarize: true
 asarUnpack:
   - resources/**
