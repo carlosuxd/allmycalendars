@@ -55,6 +55,19 @@ export interface EventsResult {
   errors: { accountEmail: string; message: string }[]
   fetchedAt: string
   fromCache: boolean
+  /** Every account failed (no connection): showing saved events, if any */
+  offline?: boolean
+}
+
+/** A Chrome profile on this computer, for joining meetings with the right Google account */
+export interface ChromeProfile {
+  /** Chrome's folder name, e.g. "Default" or "Profile 4" */
+  dir: string
+  name: string
+  /** The Google account signed in to this profile */
+  email?: string
+  /** Profile picture as a small data URL */
+  avatar?: string
 }
 
 export interface Settings {
@@ -77,6 +90,8 @@ export interface AppInfo {
 export interface Api {
   getAccounts(): Promise<Account[]>
   updateAccount(email: string, changes: AccountChanges): Promise<Account[]>
+  /** Saves the order accounts appear in (sidebar and Settings) */
+  reorderAccounts(emails: string[]): Promise<Account[]>
   /** Stop waiting for a browser sign-in (e.g. the Google tab was closed) */
   cancelSignIn(): Promise<void>
   /** Open the waiting sign-in's Google page again */
@@ -88,11 +103,17 @@ export interface Api {
   setCalendarEnabled(accountEmail: string, calendarId: string, enabled: boolean): Promise<void>
   getEvents(weekStartIso: string, force?: boolean): Promise<EventsResult>
   openExternal(url: string): Promise<void>
+  /** Chrome's profiles on this computer ([] when Chrome isn't installed) */
+  getChromeProfiles(): Promise<ChromeProfile[]>
+  /** Open a link in a specific Chrome profile; false if it couldn't */
+  openInChromeProfile(url: string, dir: string): Promise<boolean>
   isConfigured(): Promise<boolean>
   onRefresh(cb: () => void): () => void
   getSettings(): Promise<Settings>
   setSettings(changes: Partial<Settings>): Promise<Settings>
   testNotification(): Promise<void>
+  /** Sync with Google right away (e.g. the connection just came back) */
+  syncNow(): Promise<void>
   getAppInfo(): Promise<AppInfo>
   openDataFolder(): Promise<void>
   clearCache(): Promise<void>

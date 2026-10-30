@@ -15,6 +15,7 @@ import { Sidebar } from './components/Sidebar'
 import { WeekView } from './components/WeekView'
 import { EventDetails } from './components/EventDetails'
 import { SignInWaiting } from './components/SignInWaiting'
+import { reorderByEmail } from '@shared/reorder'
 import { SettingsView, type SettingsSection } from './components/settings/SettingsView'
 
 /** Narrowest a day column may get before a day is dropped */
@@ -47,7 +48,8 @@ function mergeResults(results: EventsResult[]): EventsResult {
     events,
     errors,
     fetchedAt: results.map((r) => r.fetchedAt).sort()[0],
-    fromCache: results.every((r) => r.fromCache)
+    fromCache: results.every((r) => r.fromCache),
+    offline: results.some((r) => r.offline)
   }
 }
 
@@ -155,6 +157,13 @@ export function App(): JSX.Element {
   // Main just synced; read the fresh cache
   useEffect(() => window.api.onRefresh(() => void loadEvents()), [loadEvents])
 
+  // The connection came back: sync right away instead of waiting for the next retry
+  useEffect(() => {
+    const onOnline = (): void => void window.api.syncNow()
+    window.addEventListener('online', onOnline)
+    return () => window.removeEventListener('online', onOnline)
+  }, [])
+
   useEffect(
     () =>
       window.api.onSelectEvent((key, start) => {
@@ -216,6 +225,12 @@ export function App(): JSX.Element {
   /** Label or dot color changed in Settings; the sidebar and calendar update right away */
   const updateAccount = async (email: string, changes: AccountChanges): Promise<void> => {
     setAccounts(await window.api.updateAccount(email, changes))
+  }
+
+  /** New account order from Settings: show it at once, then take the saved order */
+  const reorderAccounts = async (emails: string[]): Promise<void> => {
+    setAccounts((current) => reorderByEmail(current, emails))
+    setAccounts(await window.api.reorderAccounts(emails))
   }
 
   const removeAccount = async (email: string): Promise<void> => {
@@ -301,7 +316,7 @@ export function App(): JSX.Element {
           </button>
           <h1 title={fmtRangeTitle(days, false)}>{fmtRangeTitle(days, compactHeader)}</h1>
           <div className="spacer" />
-          {result?.fromCache && result.errors.length > 0 && (
+          {result?.offline && (
             <span className="badge warn">{compactHeader ? 'Offline' : 'Offline · showing saved'}</span>
           )}
           {compactHeader ? (
@@ -332,7 +347,7 @@ export function App(): JSX.Element {
             </button>
           </div>
         )}
-        {result && result.errors.length > 0 && !result.fromCache && (
+        {result && !result.offline && result.errors.length > 0 && (
           <div className="banner warn">
             Couldn't load {result.errors.map((e) => e.accountEmail).join(', ')}. If this keeps happening, remove the
             account and add it again.
@@ -388,6 +403,7 @@ export function App(): JSX.Element {
           onAddAccount={addAccount}
           onRemoveAccount={removeAccount}
           onUpdateAccount={updateAccount}
+          onReorderAccounts={reorderAccounts}
           onCancelAdd={cancelAdd}
           onReopenSignIn={reopenSignIn}
         />

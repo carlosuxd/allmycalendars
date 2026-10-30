@@ -5,6 +5,7 @@ const api: Api = {
   isConfigured: () => ipcRenderer.invoke('isConfigured'),
   getAccounts: () => ipcRenderer.invoke('getAccounts'),
   updateAccount: (email, changes) => ipcRenderer.invoke('updateAccount', email, changes),
+  reorderAccounts: (emails) => ipcRenderer.invoke('reorderAccounts', emails),
   cancelSignIn: () => ipcRenderer.invoke('cancelSignIn'),
   reopenSignIn: () => ipcRenderer.invoke('reopenSignIn'),
   addAccount: () => ipcRenderer.invoke('addAccount'),
@@ -14,6 +15,8 @@ const api: Api = {
   setCalendarEnabled: (email, id, enabled) => ipcRenderer.invoke('setCalendarEnabled', email, id, enabled),
   getEvents: (weekStartIso, force) => ipcRenderer.invoke('getEvents', weekStartIso, force),
   openExternal: (url) => ipcRenderer.invoke('openExternal', url),
+  getChromeProfiles: () => ipcRenderer.invoke('getChromeProfiles'),
+  openInChromeProfile: (url, dir) => ipcRenderer.invoke('openInChromeProfile', url, dir),
   onRefresh: (cb) => {
     const listener = (): void => cb()
     ipcRenderer.on('refresh', listener)
@@ -22,6 +25,7 @@ const api: Api = {
   getSettings: () => ipcRenderer.invoke('getSettings'),
   setSettings: (changes) => ipcRenderer.invoke('setSettings', changes),
   testNotification: () => ipcRenderer.invoke('testNotification'),
+  syncNow: () => ipcRenderer.invoke('syncNow'),
   getAppInfo: () => ipcRenderer.invoke('getAppInfo'),
   openDataFolder: () => ipcRenderer.invoke('openDataFolder'),
   clearCache: () => ipcRenderer.invoke('clearCache'),

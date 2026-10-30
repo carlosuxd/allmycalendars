@@ -2,6 +2,7 @@ import { app, safeStorage } from 'electron'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import type { Account, AccountChanges, CalendarInfo, EventsResult, Settings } from '@shared/types'
+import { reorderByEmail } from '@shared/reorder'
 
 interface StoredAccount extends Account {
   /** Refresh token, encrypted with the OS keychain (base64) */
@@ -75,6 +76,13 @@ export function saveAccount(email: string, refreshToken: string): Account {
 const LABEL_MAX = 30
 
 /** Sets an account's label (empty removes it) and/or dot color (#rrggbb only). */
+/** Saves a new account order (sidebar order); see reorderByEmail for the safety rules. */
+export function reorderAccounts(emails: string[]): void {
+  const d = load()
+  d.accounts = reorderByEmail(d.accounts, emails)
+  save()
+}
+
 export function updateAccount(email: string, changes: AccountChanges): void {
   const acc = load().accounts.find((a) => a.email === email)
   if (!acc) return

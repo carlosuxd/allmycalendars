@@ -1,10 +1,11 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeTheme, powerMonitor, shell } from 'electron'
 import { join } from 'path'
 import * as auth from './auth'
 import * as google from './google'
 import * as store from './store'
 import * as notifier from './notifier'
 import * as tray from './tray'
+import * as chrome from './chrome'
 import { loadWeek } from './events'
 import type { AccountChanges, Settings } from '@shared/types'
 import icon from '../../resources/icon.png?asset'
@@ -125,6 +126,11 @@ ipcMain.handle('updateAccount', (_e, email: string, changes: AccountChanges) => 
   tray.update()
   return store.getAccounts()
 })
+ipcMain.handle('reorderAccounts', (_e, emails: string[]) => {
+  store.reorderAccounts(emails)
+  tray.update()
+  return store.getAccounts()
+})
 ipcMain.handle('getCalendars', () => store.getCalendars())
 ipcMain.handle('refreshCalendars', () => google.refreshAllCalendars())
 ipcMain.handle('setCalendarEnabled', (_e, email: string, id: string, enabled: boolean) => {
@@ -132,6 +138,8 @@ ipcMain.handle('setCalendarEnabled', (_e, email: string, id: string, enabled: bo
   syncNow()
 })
 ipcMain.handle('openExternal', (_e, url: string) => openSafely(url))
+ipcMain.handle('getChromeProfiles', () => chrome.listProfiles())
+ipcMain.handle('openInChromeProfile', (_e, url: string, dir: string) => chrome.openInProfile(url, dir))
 ipcMain.handle('getEvents', (_e, weekStartIso: string, force?: boolean) => loadWeek(weekStartIso, force))
 ipcMain.handle('getSettings', () => store.getSettings())
 ipcMain.handle('setSettings', (_e, changes: Partial<Settings>) => {
@@ -143,6 +151,7 @@ ipcMain.handle('setSettings', (_e, changes: Partial<Settings>) => {
   return settings
 })
 ipcMain.handle('testNotification', () => notifier.showTest())
+ipcMain.handle('syncNow', () => syncNow())
 ipcMain.handle('getAppInfo', () => ({ version: app.getVersion(), dataPath: app.getPath('userData') }))
 ipcMain.handle('openDataFolder', () => shell.openPath(app.getPath('userData')))
 ipcMain.handle('clearCache', () => {
@@ -179,6 +188,8 @@ if (!app.requestSingleInstanceLock()) {
     lastSync = Date.now()
 
     app.on('activate', showWindow)
+    // Connections usually drop during sleep; catch up as soon as the computer wakes
+    powerMonitor.on('resume', syncNow)
   })
 
   app.on('before-quit', () => (isQuitting = true))

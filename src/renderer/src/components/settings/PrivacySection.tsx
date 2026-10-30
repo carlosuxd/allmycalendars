@@ -46,7 +46,8 @@ const PROMISES: { icon: Icon; title: string; body: string }[] = [
     body:
       'Your sign-in keys are encrypted by your operating system (Windows DPAPI or the macOS Keychain). Recently ' +
       'loaded events are saved in your private app-data folder, so the app opens instantly and works offline. ' +
-      'Nothing is uploaded or synced anywhere.'
+      'Nothing is uploaded or synced anywhere. To let you pick a Chrome profile when joining a meeting, the app ' +
+      'reads Chrome’s list of profiles on this computer; it never leaves your device.'
   },
   {
     icon: ProhibitIcon,

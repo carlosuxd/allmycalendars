@@ -17,8 +17,16 @@ export function isConfigured(): boolean {
   return Boolean(CLIENT_ID && CLIENT_SECRET && !CLIENT_ID.startsWith('your-'))
 }
 
+/** Give up on a request to Google after this long, so a dropped connection can't leave it hanging */
+export const REQUEST_TIMEOUT_MS = 20_000
+
 function newClient(redirectUri?: string): OAuth2Client {
-  return new OAuth2Client({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET, redirectUri })
+  return new OAuth2Client({
+    clientId: CLIENT_ID,
+    clientSecret: CLIENT_SECRET,
+    redirectUri,
+    transporterOptions: { timeout: REQUEST_TIMEOUT_MS }
+  })
 }
 
 const clients = new Map<string, OAuth2Client>()

@@ -5,6 +5,7 @@ import type { Account, CalendarEvent } from '@shared/types'
 import { accountFullName, accountName } from '../accounts'
 import { fmtRange } from '../dates'
 import { accountDotColor, useDarkMode } from '../color'
+import { JoinButton } from './JoinButton'
 
 const RESPONSE: Record<string, string> = {
   accepted: 'Going',
@@ -110,9 +111,7 @@ export function EventDetails({ event: e, account, overlay, onClose }: Props): JS
 
       {e.meetingLink && (
         <>
-          <button className="join" onClick={open(e.meetingLink)}>
-            Join {meetingService(e.meetingLink)}
-          </button>
+          <JoinButton url={e.meetingLink} accountEmail={e.accountEmail} label={`Join ${meetingService(e.meetingLink)}`} />
           <MeetingLink url={e.meetingLink} />
         </>
       )}

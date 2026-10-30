@@ -5,6 +5,10 @@ import * as store from './store'
 import type { CalendarEvent } from '@shared/types'
 
 const CHECK_INTERVAL_MS = 30 * 1000
+/** While offline, try again this often instead of every 5 minutes */
+const OFFLINE_RETRY_MS = 30 * 1000
+
+let nextSync: ReturnType<typeof setTimeout> | undefined
 
 interface Options {
   icon: string
@@ -27,6 +31,7 @@ const startMs = (e: CalendarEvent): number => new Date(e.start).getTime()
 const accountName = (email: string): string => store.getAccounts().find((a) => a.email === email)?.label ?? email
 
 export async function sync(force = true): Promise<void> {
+  let offline = false
   if (!store.getAccounts().length) {
     upcoming = []
   } else {
@@ -36,14 +41,19 @@ export async function sync(force = true): Promise<void> {
         loadWeek(thisWeek.toISOString(), force),
         loadWeek(addDays(thisWeek, 7).toISOString(), force)
       ])
+      offline = weeks.some((w) => w.offline)
       upcoming = weeks
         .flatMap((w) => w.events)
         .filter((e) => !e.allDay)
         .sort((a, b) => startMs(a) - startMs(b))
     } catch {
       // Keep the previous list; the next sync will try again
+      offline = true
     }
   }
+  // Retry soon while offline, otherwise the normal 5-minute rhythm
+  clearTimeout(nextSync)
+  nextSync = setTimeout(() => void sync(), offline ? OFFLINE_RETRY_MS : REFRESH_INTERVAL_MS)
   opts.onSynced()
   check()
 }
@@ -101,7 +111,7 @@ export function showTest(): void {
 
 export function start(options: Options): void {
   opts = options
+  // Each sync schedules the next one
   void sync(false)
-  setInterval(() => void sync(), REFRESH_INTERVAL_MS)
   setInterval(check, CHECK_INTERVAL_MS)
 }

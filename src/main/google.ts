@@ -1,11 +1,11 @@
 import { calendar, type calendar_v3 } from '@googleapis/calendar'
-import { clientFor } from './auth'
+import { clientFor, REQUEST_TIMEOUT_MS } from './auth'
 import * as store from './store'
 import type { CalendarEvent, CalendarInfo, EventsResult } from '@shared/types'
 
 function api(email: string): calendar_v3.Calendar {
   // @googleapis/calendar may bundle its own copy of google-auth-library, hence the cast.
-  return calendar({ version: 'v3', auth: clientFor(email) as never })
+  return calendar({ version: 'v3', auth: clientFor(email) as never, timeout: REQUEST_TIMEOUT_MS })
 }
 
 export async function fetchCalendars(email: string): Promise<CalendarInfo[]> {

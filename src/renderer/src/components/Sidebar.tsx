@@ -4,6 +4,7 @@ import { CaretDownIcon, CaretRightIcon, LockSimpleIcon } from '@phosphor-icons/r
 import type { Account, CalendarEvent, CalendarInfo } from '@shared/types'
 import { eventEnd, eventStart, fmtTime, sameDay } from '../dates'
 import { accountDotColor, ensureContrast, THEME, useDarkMode } from '../color'
+import { JoinButton } from './JoinButton'
 
 interface Props {
   accounts: Account[]
@@ -37,9 +38,7 @@ function NextUp({ event: e, onSelect }: { event: CalendarEvent; onSelect(e: Cale
       </button>
       <div className="muted small">{when}</div>
       {e.meetingLink && (
-        <button className="join small-join" onClick={() => window.api.openExternal(e.meetingLink!)}>
-          Join
-        </button>
+        <JoinButton url={e.meetingLink} accountEmail={e.accountEmail} label="Join" className="join small-join" />
       )}
     </div>
   )
