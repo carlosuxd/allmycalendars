@@ -1,7 +1,7 @@
 {
   "name": "all-my-calendars",
   "productName": "All My Calendars",
-  "version": "0.1.18",
+  "version": "1.1.2",
   "description": "All your Google calendars in one weekly view",
   "main": "./out/main/index.js",
   "author": "Carlos Collazos",
@@ -12,15 +12,13 @@
     "build": "electron-vite build",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "start": "electron-vite preview",
-    "build:win": "npm version patch --no-git-tag-version && npm run build && electron-builder --win",
-    "build:mac": "npm version patch --no-git-tag-version && npm run build && APPLE_KEYCHAIN_PROFILE=allmycalendars-notary electron-builder --mac"
-  },
-  "dependencies": {
-    "@googleapis/calendar": "^20.1.0",
-    "@phosphor-icons/react": "^2.1.10",
-    "google-auth-library": "^11.3.1"
+    "bump": "npm version patch --no-git-tag-version",
+    "build:win": "npm run build && electron-builder --win",
+    "build:mac": "npm run build && APPLE_KEYCHAIN_PROFILE=allmycalendars-notary electron-builder --mac"
   },
   "devDependencies": {
+    "@googleapis/calendar": "^20.1.0",
+    "@phosphor-icons/react": "^2.1.10",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -28,6 +26,7 @@
     "electron": "^45.0.0",
     "electron-builder": "^26.15.3",
     "electron-vite": "^6.0.0",
+    "google-auth-library": "^11.3.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "typescript": "^7.0.2",

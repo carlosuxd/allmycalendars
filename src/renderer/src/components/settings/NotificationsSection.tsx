@@ -3,10 +3,20 @@ import type { JSX } from 'react'
 import { BellRingingIcon, CheckIcon } from '@phosphor-icons/react'
 import type { SectionProps } from './SettingsView'
 
-const LEAD_OPTIONS = [1, 5, 10, 15, 30]
+/** Minutes before a meeting; 0 is when it starts */
+const REMINDER_OPTIONS = [60, 30, 15, 10, 5, 1, 0]
+
+const reminderLabel = (m: number): string => (m === 0 ? 'At start' : m === 60 ? '1 hour' : `${m} min`)
 
 export function NotificationsSection({ settings, change }: SectionProps): JSX.Element {
   const [tested, setTested] = useState(false)
+
+  const toggleReminder = (m: number): void => {
+    const on = settings.reminders.includes(m)
+    // Keep at least one; turning notifications off is the switch above
+    if (on && settings.reminders.length === 1) return
+    void change({ reminders: on ? settings.reminders.filter((x) => x !== m) : [...settings.reminders, m] })
+  }
 
   const test = async (): Promise<void> => {
     await window.api.testNotification()
@@ -31,20 +41,28 @@ export function NotificationsSection({ settings, change }: SectionProps): JSX.El
             onChange={(e) => void change({ notifications: e.target.checked })}
           />
         </label>
-        <label className={`setting ${settings.notifications ? '' : 'disabled'}`}>
-          <div className="setting-label">When</div>
-          <select
-            value={settings.leadMinutes}
-            disabled={!settings.notifications}
-            onChange={(e) => void change({ leadMinutes: Number(e.target.value) })}
-          >
-            {LEAD_OPTIONS.map((m) => (
-              <option key={m} value={m}>
-                {m} {m === 1 ? 'minute' : 'minutes'} before
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className={`setting stacked ${settings.notifications ? '' : 'disabled'}`}>
+          <div>
+            <div className="setting-label">When</div>
+            <div className="muted small">Pick one or more. Each meeting reminds you at every time you choose.</div>
+          </div>
+          <div className="segmented multi" role="group" aria-label="Reminder times">
+            {REMINDER_OPTIONS.map((m) => {
+              const on = settings.reminders.includes(m)
+              return (
+                <button
+                  key={m}
+                  aria-pressed={on}
+                  className={on ? 'active' : ''}
+                  disabled={!settings.notifications}
+                  onClick={() => toggleReminder(m)}
+                >
+                  {reminderLabel(m)}
+                </button>
+              )
+            })}
+          </div>
+        </div>
         <div className="setting">
           <div>
             <div className="setting-label">Test</div>

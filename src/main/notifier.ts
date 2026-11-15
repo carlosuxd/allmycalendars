@@ -5,6 +5,8 @@ import * as store from './store'
 import type { CalendarEvent } from '@shared/types'
 
 const CHECK_INTERVAL_MS = 30 * 1000
+/** A "when it starts" reminder still shows if the app notices up to this late (e.g. after sleep) */
+const START_GRACE_MS = 2 * 60 * 1000
 /** While offline, try again this often instead of every 5 minutes */
 const OFFLINE_RETRY_MS = 30 * 1000
 
@@ -20,7 +22,7 @@ interface Options {
 
 let opts: Options
 let upcoming: CalendarEvent[] = []
-/** "key|start" of meetings already notified, so each one fires once */
+/** "start|minutes|key" of reminders already shown or skipped, so each one fires once */
 const notified = new Set<string>()
 /** Keep shown notifications referenced so their click handlers survive garbage collection */
 const shown = new Set<Notification>()
@@ -59,7 +61,7 @@ export async function sync(force = true): Promise<void> {
 }
 
 function relative(minutes: number): string {
-  if (minutes <= 0) return 'now'
+  if (minutes <= 0) return 'starting now'
   if (minutes === 1) return 'in 1 min'
   return `in ${minutes} min`
 }
@@ -80,15 +82,19 @@ function check(): void {
   const settings = store.getSettings()
   const now = Date.now()
   for (const id of notified) {
-    if (Number(id.split('|').pop()) < now) notified.delete(id)
+    if (Number(id.split('|')[0]) + START_GRACE_MS < now) notified.delete(id)
   }
   if (!settings.notifications) return
 
   for (const e of upcoming) {
     const start = startMs(e)
-    const id = `${e.key}|${start}`
-    if (start <= now || start - settings.leadMinutes * 60_000 > now || notified.has(id)) continue
-    notified.add(id)
+    if (start + START_GRACE_MS < now) continue
+    // Reminders whose time has come, largest first. Once the meeting starts only "when it starts" is left.
+    const due = settings.reminders.filter((m) => (m > 0 ? now >= start - m * 60_000 && now < start : now >= start))
+    const ids = due.map((m) => `${start}|${m}|${e.key}`)
+    // Several can be due at once (e.g. the app just opened); show only the latest one
+    if (!ids.length || notified.has(ids[ids.length - 1])) continue
+    for (const id of ids) notified.add(id)
     const time = new Date(start).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
     show(
       `${e.title} ${relative(Math.round((start - now) / 60_000))}`,
@@ -104,9 +110,15 @@ export function nextMeeting(): CalendarEvent | undefined {
   return upcoming.find((e) => new Date(e.end).getTime() > now)
 }
 
+/** "30 min before, 10 min before and when it starts" */
+function describeReminders(reminders: number[]): string {
+  const parts = reminders.map((m) => (m === 0 ? 'when it starts' : `${m} min before`))
+  return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}` : parts[0]
+}
+
 export function showTest(): void {
-  const lead = store.getSettings().leadMinutes
-  show('Notifications are working', `You'll be notified ${lead} min before each meeting.`, () => {})
+  const when = describeReminders(store.getSettings().reminders)
+  show('Notifications are working', `You'll get a reminder ${when}.`, () => {})
 }
 
 export function start(options: Options): void {

@@ -19,7 +19,7 @@ interface Data {
 
 const DEFAULT_SETTINGS: Settings = {
   notifications: true,
-  leadMinutes: 5,
+  reminders: [5],
   openAtLogin: false,
   collapsedAccounts: [],
   theme: 'system',
@@ -137,11 +137,25 @@ export function setCached(week: string, result: EventsResult): void {
   save()
 }
 
+/** Settings saved before multiple reminders had a single lead time */
+type SavedSettings = Partial<Settings> & { leadMinutes?: number }
+
 export function getSettings(): Settings {
-  return { ...DEFAULT_SETTINGS, ...load().settings }
+  const { leadMinutes, ...saved }: SavedSettings = load().settings ?? {}
+  return {
+    ...DEFAULT_SETTINGS,
+    ...(leadMinutes !== undefined ? { reminders: [leadMinutes] } : {}),
+    ...saved
+  }
 }
 
 export function setSettings(changes: Partial<Settings>): Settings {
+  if (changes.reminders) {
+    // Whole minutes between 0 and a day, no repeats, largest first
+    const valid = changes.reminders.filter((m) => Number.isInteger(m) && m >= 0 && m <= 1440)
+    changes = { ...changes, reminders: [...new Set(valid)].sort((a, b) => b - a) }
+    if (!changes.reminders!.length) delete changes.reminders
+  }
   load().settings = { ...getSettings(), ...changes }
   save()
   return getSettings()

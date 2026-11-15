@@ -55,25 +55,56 @@ Click **Add Google account** on the welcome screen (later: **Manage** next to Ac
 
 ## 3. Build an installer
 
-On Windows (creates `dist/All My Calendars Setup x.y.z.exe`):
+The client ID from `.env` is built into the installer, so set it up before building.
+
+### Version number
+
+Builds never change the version: rebuilding gives the same number until you bump it. Bump once, then build Mac and Windows so both installers share the number.
+
+| Command | What it does |
+| --- | --- |
+| `npm pkg get version` | Show the current version |
+| `npm run bump` | Next patch version, e.g. 1.1.2 → 1.1.3 (no git commit or tag) |
+| `npm version 1.2.0 --no-git-tag-version` | Set an exact version, e.g. to start a new 1.2 line |
+
+### Build commands
+
+| Command | Output in `dist/` |
+| --- | --- |
+| `npm run build:mac` | `All My Calendars-x.y.z-arm64.dmg`, signed and notarized (Mac only) |
+| `npm run build:win` | `All My Calendars Setup x.y.z.exe` |
+| `npm run typecheck` | Nothing; checks the TypeScript before you build |
+
+A typical release:
 
 ```bash
+npm run bump
+npm run typecheck
+npm run build:mac
 npm run build:win
 ```
 
-On a Mac (creates a `.dmg` in `dist/`):
+The Mac version must be built on a Mac. It's signed with the Developer ID certificate in your login keychain and notarized with the `allmycalendars-notary` keychain profile. Create that profile once with:
 
 ```bash
-npm run build:mac
+xcrun notarytool store-credentials allmycalendars-notary --apple-id <your Apple ID> --team-id 85TS9FR52Q
 ```
 
-The Mac version must be built on a Mac. The installers aren't code-signed, so on first launch Windows shows "Windows protected your PC" (click **More info → Run anyway**), and macOS asks you to right-click the app → **Open**.
+The Windows installer isn't code-signed, so on first launch Windows shows "Windows protected your PC" (click **More info → Run anyway**).
 
-The client ID from `.env` is built into the installer, so set it up before building.
+### Quick test build (Mac)
+
+Builds the app into `dist/mac-arm64/` without a `.dmg` and without notarizing, which takes about a minute instead of several:
+
+```bash
+npm run build && npx electron-builder --mac --dir -c.mac.notarize=false
+```
+
+Launching the app from VS Code's terminal makes it quit right away, because VS Code sets `ELECTRON_RUN_AS_NODE`. Use a regular Terminal window, or prefix the command with `env -u ELECTRON_RUN_AS_NODE`. The same applies to `npm run dev`.
 
 ### Updating the installed app (Windows)
 
-Each `npm run build:win` bumps the version and creates a new `dist\All My Calendars Setup x.y.z.exe`. To update, just double-click it:
+To update, double-click the new `dist\All My Calendars Setup x.y.z.exe`:
 there's no wizard and no need to uninstall first. It closes the running app (including from the tray), replaces it with the new version, and reopens it.
 Your accounts and settings are kept. You can delete older Setup files from `dist` whenever you like.
 

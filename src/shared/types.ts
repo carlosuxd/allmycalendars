@@ -72,8 +72,8 @@ export interface ChromeProfile {
 
 export interface Settings {
   notifications: boolean
-  /** How many minutes before a meeting to notify */
-  leadMinutes: number
+  /** Minutes before a meeting to notify, largest first; 0 means when it starts */
+  reminders: number[]
   openAtLogin: boolean
   /** Accounts collapsed in the sidebar */
   collapsedAccounts: string[]

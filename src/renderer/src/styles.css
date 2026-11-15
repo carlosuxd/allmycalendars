@@ -811,6 +811,22 @@ label.setting {
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
   font-weight: 600;
 }
+/* Several can be on at once (e.g. reminder times), so "on" is the accent color */
+.segmented.multi {
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.segmented.multi button.active,
+.segmented.multi button.active:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+/* Label above, control below, for controls too wide to sit beside the label */
+.setting.stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
 
 /* Privacy */
 .privacy-hero {
