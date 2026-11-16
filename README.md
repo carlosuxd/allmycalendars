@@ -71,8 +71,8 @@ Builds never change the version: rebuilding gives the same number until you bump
 
 | Command | Output in `dist/` |
 | --- | --- |
-| `npm run build:mac` | `AllMyCalendars-x.y.z-mac-arm64.dmg` and `.zip` (+ `.blockmap`s) and `latest-mac.yml`, signed and notarized (Mac only) |
-| `npm run build:win` | `AllMyCalendars-x.y.z-win-x64.exe` (+ `.blockmap`) and `latest.yml` |
+| `npm run build:mac` | `All My Calendars-x.y.z-arm64.dmg`, signed and notarized (Mac only) |
+| `npm run build:win` | `All My Calendars Setup x.y.z.exe` |
 | `npm run typecheck` | Nothing; checks the TypeScript before you build |
 
 A typical release:
@@ -92,12 +92,6 @@ xcrun notarytool store-credentials allmycalendars-notary --apple-id <your Apple 
 
 The Windows installer isn't code-signed, so on first launch Windows shows "Windows protected your PC" (click **More info → Run anyway**).
 
-Building the Windows installer on an Apple silicon Mac needs Rosetta, because electron-builder's NSIS tool is an Intel program. Without it the build fails with `Unknown system error -86`. Install Rosetta once with:
-
-```bash
-softwareupdate --install-rosetta --agree-to-license
-```
-
 ### Quick test build (Mac)
 
 Builds the app into `dist/mac-arm64/` without a `.dmg` and without notarizing, which takes about a minute instead of several:
@@ -108,37 +102,11 @@ npm run build && npx electron-builder --mac --dir -c.mac.notarize=false
 
 Launching the app from VS Code's terminal makes it quit right away, because VS Code sets `ELECTRON_RUN_AS_NODE`. Use a regular Terminal window, or prefix the command with `env -u ELECTRON_RUN_AS_NODE`. The same applies to `npm run dev`.
 
-## 4. Publish an update
+### Updating the installed app (Windows)
 
-Installed copies of the app check `https://downloads.allmycalendars.app` (the Cloudflare R2 bucket) about 10 seconds after each launch. If there's a newer version, they download it in the background and show **"Version x.y.z is ready to install · Restart now"**. If the user ignores it, the update installs the next time the app quits. Users can also click **Check for updates** in Settings → About.
-
-The app decides "there's a new version" by reading `latest-mac.yml` (Mac) and `latest.yml` (Windows). So a release is just:
-
-1. Build: `npm run bump`, then `npm run build:mac` and `npm run build:win`.
-2. In the Cloudflare dashboard → R2 → the downloads bucket, upload these files from `dist/`:
-
-   | Upload first | Upload **last** (replace the old ones) |
-   | --- | --- |
-   | `AllMyCalendars-x.y.z-mac-arm64.zip` | `latest-mac.yml` |
-   | `AllMyCalendars-x.y.z-mac-arm64.zip.blockmap` | `latest.yml` |
-   | `AllMyCalendars-x.y.z-mac-arm64.dmg` | |
-   | `AllMyCalendars-x.y.z-win-x64.exe` | |
-   | `AllMyCalendars-x.y.z-win-x64.exe.blockmap` | |
-
-   Upload the two `.yml` files **last**: as soon as they're on R2, every running app starts downloading the files they point to, so those must already be there.
-3. Update the download links on the website to the new `.dmg` and `.exe` names.
-
-Keep the files of older versions on R2 for a while. Windows uses the old `.blockmap` to download only what changed.
-
-Copies of the app older than the first version with this updater can't update themselves. Their users need to download the new version from the website once.
-
-The app is only updated from files you upload. It checks the files' sha512 hashes (from the `.yml`) before installing, and on Mac it also requires the update to be signed with the same Developer ID.
-
-### Updating by hand (Windows)
-
-Double-clicking a newer `AllMyCalendars-x.y.z-win-x64.exe` also updates in place:
+To update, double-click the new `dist\All My Calendars Setup x.y.z.exe`:
 there's no wizard and no need to uninstall first. It closes the running app (including from the tray), replaces it with the new version, and reopens it.
-Your accounts and settings are kept.
+Your accounts and settings are kept. You can delete older Setup files from `dist` whenever you like.
 
 ## Notifications
 

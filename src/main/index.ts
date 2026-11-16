@@ -6,7 +6,6 @@ import * as store from './store'
 import * as notifier from './notifier'
 import * as tray from './tray'
 import * as chrome from './chrome'
-import * as updater from './updater'
 import { loadWeek } from './events'
 import type { AccountChanges, Settings } from '@shared/types'
 import icon from '../../resources/icon.png?asset'
@@ -153,19 +152,12 @@ ipcMain.handle('setSettings', (_e, changes: Partial<Settings>) => {
 })
 ipcMain.handle('testNotification', () => notifier.showTest())
 ipcMain.handle('syncNow', () => syncNow())
-ipcMain.handle('getAppInfo', () => ({
-  version: app.getVersion(),
-  dataPath: app.getPath('userData'),
-  canUpdate: updater.isSupported()
-}))
+ipcMain.handle('getAppInfo', () => ({ version: app.getVersion(), dataPath: app.getPath('userData') }))
 ipcMain.handle('openDataFolder', () => shell.openPath(app.getPath('userData')))
 ipcMain.handle('clearCache', () => {
   store.clearCache()
   syncNow()
 })
-ipcMain.handle('getUpdateStatus', () => updater.getStatus())
-ipcMain.handle('checkForUpdates', () => updater.check())
-ipcMain.handle('installUpdate', () => updater.restartAndInstall())
 
 // Launching the app again just brings up the running one
 if (!app.requestSingleInstanceLock()) {
@@ -183,7 +175,7 @@ if (!app.requestSingleInstanceLock()) {
     const startedAtLogin = app.getLoginItemSettings().wasOpenedAtLogin || process.argv.includes('--hidden')
     if (!startedAtLogin) createWindow()
 
-    tray.create({ icon, showWindow, openEvent, quit, installUpdate: updater.restartAndInstall })
+    tray.create({ icon, showWindow, openEvent, quit })
     notifier.start({
       icon,
       openEvent,
@@ -194,18 +186,6 @@ if (!app.requestSingleInstanceLock()) {
       }
     })
     lastSync = Date.now()
-
-    // Checks once, shortly after launch
-    updater.start({
-      onStatus: (status) => {
-        tray.update()
-        win?.webContents.send('update-status', status)
-      },
-      onReady: (version) =>
-        notifier.show('Update ready', `Restart All My Calendars to install version ${version}.`, showWindow),
-      // quitAndInstall closes the windows before before-quit fires, so keep-in-tray must not stop it
-      prepareToQuit: () => (isQuitting = true)
-    })
 
     app.on('activate', showWindow)
     // Connections usually drop during sleep; catch up as soon as the computer wakes

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { Api, UpdateStatus } from '@shared/types'
+import type { Api } from '@shared/types'
 
 const api: Api = {
   isConfigured: () => ipcRenderer.invoke('isConfigured'),
@@ -29,14 +29,6 @@ const api: Api = {
   getAppInfo: () => ipcRenderer.invoke('getAppInfo'),
   openDataFolder: () => ipcRenderer.invoke('openDataFolder'),
   clearCache: () => ipcRenderer.invoke('clearCache'),
-  getUpdateStatus: () => ipcRenderer.invoke('getUpdateStatus'),
-  checkForUpdates: () => ipcRenderer.invoke('checkForUpdates'),
-  installUpdate: () => ipcRenderer.invoke('installUpdate'),
-  onUpdateStatus: (cb) => {
-    const listener = (_e: Electron.IpcRendererEvent, status: UpdateStatus): void => cb(status)
-    ipcRenderer.on('update-status', listener)
-    return () => ipcRenderer.removeListener('update-status', listener)
-  },
   onSelectEvent: (cb) => {
     const listener = (_e: Electron.IpcRendererEvent, key: string, start: string): void => cb(key, start)
     ipcRenderer.on('select-event', listener)

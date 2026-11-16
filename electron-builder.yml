@@ -11,17 +11,8 @@ files:
 compression: maximum
 electronLanguages:
   - en
-# In-app updates read latest.yml / latest-mac.yml from here (uploaded by hand to Cloudflare R2)
-publish:
-  provider: generic
-  url: https://downloads.allmycalendars.app
-# No spaces, so the file names inside latest*.yml match the files on R2
-artifactName: AllMyCalendars-${version}-${os}-${arch}.${ext}
 win:
-  target:
-    # Intel/AMD PCs; building on an Apple silicon Mac would otherwise make an ARM-only installer
-    - target: nsis
-      arch: [x64]
+  target: nsis
 nsis:
   # One-click: running a newer Setup just updates the installed app (no wizard)
   oneClick: true
@@ -35,13 +26,7 @@ nsis:
   # Accounts and settings in %APPDATA% are never removed
   deleteAppDataOnUninstall: false
 mac:
-  target:
-    # The .dmg is for downloads from the website
-    - target: dmg
-      arch: [arm64]
-    # The .zip is what in-app updates install on macOS
-    - target: zip
-      arch: [arm64]
+  target: dmg
   category: public.app-category.productivity
   # Developer ID Application certificate (must be in the login keychain)
   identity: "Carlos Collazos (85TS9FR52Q)"
