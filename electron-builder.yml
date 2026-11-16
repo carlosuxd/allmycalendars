@@ -13,13 +13,22 @@ electronLanguages:
   - en
 # Installer names without spaces, e.g. AllMyCalendars-1.1.3-mac-arm64.dmg
 artifactName: AllMyCalendars-${version}-${os}-${arch}.${ext}
+# Shown in the installer's Properties > Details, so antivirus sees real metadata
+copyright: Copyright © 2026 Carlos Collazos
 win:
+  # Stick with one installer type: switching resets SmartScreen reputation
   target: nsis
+  # Never ask for admin rights
+  requestedExecutionLevel: asInvoker
+  legalTrademarks: All My Calendars
 nsis:
   # One-click: running a newer Setup just updates the installed app (no wizard)
   oneClick: true
   # Per-user install, no admin prompt
   perMachine: false
+  allowElevation: false
+  # Name shown in Settings > Apps
+  uninstallDisplayName: All My Calendars
   # Reopen the app after installing or updating
   runAfterFinish: true
   createDesktopShortcut: true

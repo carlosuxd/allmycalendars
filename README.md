@@ -108,6 +108,19 @@ To update, double-click the new `dist\AllMyCalendars-x.y.z-win-<arch>.exe`:
 there's no wizard and no need to uninstall first. It closes the running app (including from the tray), replaces it with the new version, and reopens it.
 Your accounts and settings are kept. You can delete older Setup files from `dist` whenever you like.
 
+### Releasing on Windows (avoiding antivirus flags)
+
+The installer isn't code-signed yet, so Windows SmartScreen shows "Windows protected your PC" to first-time users until the file builds up reputation. They can click **More info → Run anyway**. For each release:
+
+1. Run `npm run build:win`.
+2. Before sharing it, right-click `dist\AllMyCalendars-x.y.z-win-<arch>.exe` → **Scan with Microsoft Defender**.
+   VirusTotal shares uploaded files with antivirus vendors, and the installer contains the Google client ID and secret. Upload it only if you're OK with that. Otherwise, search VirusTotal for the file's SHA-256 hash instead (`certutil -hashfile <file> SHA256`).
+3. If it's flagged, submit it as a false positive at <https://www.microsoft.com/wdsi/filesubmission> and choose "Software developer".
+4. Publish from the same place (GitHub Releases) with the same file naming every time, so reputation carries over between releases.
+5. Keep Electron pinned (`"electron": "45.0.0"` in `package.json`) and upgrade it on purpose. A new Electron version changes the bundled `.exe` files and resets reputation. Also keep the NSIS installer type, for the same reason.
+
+The only real fix for the SmartScreen warning is code signing. The cheapest option is Azure Trusted Signing (about $10/month), which electron-builder supports through `win.azureSignOptions`.
+
 ## Notifications
 
 Open **⚙ Settings → Notifications** to turn reminders on/off, choose how early they arrive, and send a test notification. All-day events, meetings you declined, and calendars you've hidden don't notify.
