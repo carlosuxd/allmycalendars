@@ -66,7 +66,7 @@ function relative(minutes: number): string {
   return `in ${minutes} min`
 }
 
-function show(title: string, body: string, onClick: () => void): void {
+export function show(title: string, body: string, onClick: () => void): void {
   if (!Notification.isSupported()) return
   const n = new Notification({ title, body, icon: opts.icon })
   shown.add(n)

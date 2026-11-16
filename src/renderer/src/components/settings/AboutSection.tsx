@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { JSX } from 'react'
 import { ArrowSquareOutIcon, InstagramLogoIcon, LinkedinLogoIcon, type Icon } from '@phosphor-icons/react'
+import type { UpdateStatus } from '@shared/types'
 import appIcon from '../../../../../resources/icon.png'
 
 const LINKS: { label: string; handle: string; url: string; icon: Icon }[] = [
@@ -8,11 +9,37 @@ const LINKS: { label: string; handle: string; url: string; icon: Icon }[] = [
   { label: 'LinkedIn', handle: 'in/uxcarlos', url: 'https://www.linkedin.com/in/uxcarlos', icon: LinkedinLogoIcon }
 ]
 
+function updateMessage(u: UpdateStatus): string {
+  switch (u.state) {
+    case 'checking':
+      return 'Checking for updates…'
+    case 'downloading':
+      return `Downloading version ${u.version}… ${u.percent ?? 0}%`
+    case 'ready':
+      return `Version ${u.version} is ready to install.`
+    case 'up-to-date':
+      return 'You’re up to date.'
+    case 'error':
+      return `Couldn’t check for updates. ${u.message ?? ''}`.trim()
+    default:
+      return ''
+  }
+}
+
 export function AboutSection(): JSX.Element {
   const [version, setVersion] = useState('')
+  const [canUpdate, setCanUpdate] = useState(false)
+  const [update, setUpdate] = useState<UpdateStatus>({ state: 'idle' })
   useEffect(() => {
-    void window.api.getAppInfo().then((i) => setVersion(i.version))
+    void window.api.getAppInfo().then((i) => {
+      setVersion(i.version)
+      setCanUpdate(i.canUpdate)
+    })
+    void window.api.getUpdateStatus().then(setUpdate)
+    return window.api.onUpdateStatus(setUpdate)
   }, [])
+
+  const busy = update.state === 'checking' || update.state === 'downloading'
 
   return (
     <>
@@ -20,6 +47,20 @@ export function AboutSection(): JSX.Element {
         <img src={appIcon} alt="" width={96} height={96} />
         <h2>All My Calendars</h2>
         <div className="muted">Version {version}</div>
+        <div className="update-check">
+          {update.state === 'ready' ? (
+            <button className="join" onClick={() => void window.api.installUpdate()}>
+              Restart now
+            </button>
+          ) : (
+            <button onClick={() => void window.api.checkForUpdates()} disabled={!canUpdate || busy}>
+              Check for updates
+            </button>
+          )}
+          <div className="muted small" role="status">
+            {canUpdate ? updateMessage(update) : 'Updates work in the installed app.'}
+          </div>
+        </div>
         <p>All your Google calendars in one weekly view.</p>
       </div>
 

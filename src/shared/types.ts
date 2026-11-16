@@ -82,9 +82,20 @@ export interface Settings {
   keepInTray: boolean
 }
 
+export interface UpdateStatus {
+  state: 'idle' | 'checking' | 'downloading' | 'ready' | 'up-to-date' | 'error'
+  /** The new version being downloaded or ready to install */
+  version?: string
+  /** Download progress, 0–100 */
+  percent?: number
+  message?: string
+}
+
 export interface AppInfo {
   version: string
   dataPath: string
+  /** False in development, where there's no update feed */
+  canUpdate: boolean
 }
 
 export interface Api {
@@ -117,6 +128,12 @@ export interface Api {
   getAppInfo(): Promise<AppInfo>
   openDataFolder(): Promise<void>
   clearCache(): Promise<void>
+  getUpdateStatus(): Promise<UpdateStatus>
+  /** Check the download server for a newer version (downloads it if there is one) */
+  checkForUpdates(): Promise<void>
+  /** Quit and install the downloaded update, then reopen */
+  installUpdate(): Promise<void>
+  onUpdateStatus(cb: (status: UpdateStatus) => void): () => void
   /** Main asks the window to open a meeting (e.g. a notification was clicked) */
   onSelectEvent(cb: (key: string, start: string) => void): () => void
 }

@@ -1,12 +1,14 @@
 import { Menu, nativeImage, Tray } from 'electron'
 import * as notifier from './notifier'
 import * as store from './store'
+import * as updater from './updater'
 
 interface Options {
   icon: string
   showWindow(): void
   openEvent(key: string, start: string): void
   quit(): void
+  installUpdate(): void
 }
 
 let tray: Tray | null = null
@@ -18,6 +20,7 @@ export function update(): void {
   if (!tray) return
   const next = notifier.nextMeeting()
   const settings = store.getSettings()
+  const update = updater.getStatus()
   let nextLabel = 'No upcoming meetings'
   if (next) {
     const start = new Date(next.start)
@@ -37,6 +40,9 @@ export function update(): void {
         checked: settings.notifications,
         click: (item) => store.setSettings({ notifications: item.checked })
       },
+      ...(update.state === 'ready'
+        ? [{ label: `Restart to update to ${update.version}`, click: opts.installUpdate }]
+        : []),
       { label: 'Quit', click: opts.quit }
     ])
   )

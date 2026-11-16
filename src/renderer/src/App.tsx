@@ -9,7 +9,15 @@ import {
   SidebarSimpleIcon,
   XIcon
 } from '@phosphor-icons/react'
-import { SIGN_IN_CANCELLED, type Account, type AccountChanges, type CalendarEvent, type CalendarInfo, type EventsResult } from '@shared/types'
+import {
+  SIGN_IN_CANCELLED,
+  type Account,
+  type AccountChanges,
+  type CalendarEvent,
+  type CalendarInfo,
+  type EventsResult,
+  type UpdateStatus
+} from '@shared/types'
 import { addDays, eventEnd, eventStart, fmtRangeTitle, startOfDay, startOfWeek } from './dates'
 import { Sidebar } from './components/Sidebar'
 import { WeekView } from './components/WeekView'
@@ -153,6 +161,14 @@ export function App(): JSX.Element {
   useEffect(() => {
     void loadEvents()
   }, [loadEvents, accounts])
+
+  // An update downloaded in the background; offer to restart until dismissed
+  const [update, setUpdate] = useState<UpdateStatus | null>(null)
+  const [updateDismissed, setUpdateDismissed] = useState(false)
+  useEffect(() => {
+    void window.api.getUpdateStatus().then(setUpdate)
+    return window.api.onUpdateStatus(setUpdate)
+  }, [])
 
   // Main just synced; read the fresh cache
   useEffect(() => window.api.onRefresh(() => void loadEvents()), [loadEvents])
@@ -345,6 +361,19 @@ export function App(): JSX.Element {
             <button className="icon-btn" onClick={() => setError(null)} aria-label="Dismiss">
               <XIcon size={16} aria-hidden />
             </button>
+          </div>
+        )}
+        {update?.state === 'ready' && !updateDismissed && (
+          <div className="banner info">
+            <span>Version {update.version} is ready to install.</span>
+            <div className="banner-actions">
+              <button className="join" onClick={() => void window.api.installUpdate()}>
+                Restart now
+              </button>
+              <button className="icon-btn" onClick={() => setUpdateDismissed(true)} aria-label="Later" title="Later">
+                <XIcon size={16} aria-hidden />
+              </button>
+            </div>
           </div>
         )}
         {result && !result.offline && result.errors.length > 0 && (
