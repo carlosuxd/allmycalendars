@@ -1,8 +1,8 @@
 {
-  "name": "all-my-calendars",
-  "productName": "All My Calendars",
+  "name": "AllMyCalendars",
+  "productName": "AllMyCalendars",
   "version": "1.1.3",
-  "description": "All your Google calendars in one weekly view",
+  "description": "All your Google calendars in one app",
   "main": "./out/main/index.js",
   "author": "Carlos Collazos",
   "license": "MIT",
