@@ -110,7 +110,11 @@ Your accounts and settings are kept. You can delete older Setup files from `dist
 
 ### Releasing on Windows (avoiding antivirus flags)
 
-The installer isn't code-signed yet, so Windows SmartScreen shows "Windows protected your PC" to first-time users until the file builds up reputation. They can click **More info → Run anyway**. For each release:
+The installer isn't code-signed yet, so Windows SmartScreen shows "Windows protected your PC" to first-time users until the file builds up reputation. They can click **More info → Run anyway**.
+
+SmartScreen judges reputation, not the app's code. Any unsigned installer that was **downloaded** (from GitHub, a browser, chat or email) gets the warning, and every new version starts from zero. An installer you build and run on your own PC never shows it, because it doesn't carry the "downloaded from the internet" mark. To build reputation faster, keep the app name (`productName`) and Electron version stable, and release less often so each version collects more downloads. Changing `productName` also moves the app's data folder (`%APPDATA%\<productName>`), which would make the app look signed out.
+
+For each release:
 
 1. Run `npm run build:win`.
 2. Before sharing it, right-click `dist\AllMyCalendars-x.y.z-win-<arch>.exe` → **Scan with Microsoft Defender**.
