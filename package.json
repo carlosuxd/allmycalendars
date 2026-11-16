@@ -1,11 +1,14 @@
 {
-  "name": "All My Calendars",
+  "name": "all-my-calendars",
   "productName": "All My Calendars",
   "version": "1.1.4",
   "description": "All your Google calendars in one app",
   "main": "./out/main/index.js",
   "author": "Carlos Collazos",
   "license": "MIT",
+  "repository": "github:carlosuxd/allmycalendars",
+  "homepage": "https://allmycalendars.app",
+  "bugs": "https://github.com/carlosuxd/allmycalendars/issues",
   "private": true,
   "scripts": {
     "dev": "electron-vite dev",

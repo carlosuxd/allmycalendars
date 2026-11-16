@@ -1,5 +1,7 @@
 # All My Calendars
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A small desktop app (Windows + macOS) that shows the Google Calendars from all your Gmail accounts in one weekly view, with one-click **Join** for Meet, Zoom, Teams and Webex links.
 
 - Sign in to as many Google accounts as you like (through your browser; the app never sees your password)
@@ -166,3 +168,11 @@ Removing an account in the app deletes its token. To fully revoke access, also r
 Designed and created by **[Carlos Collazos](https://www.instagram.com/ux.carlos)**, Senior Product Designer.
 
 Icons by [Phosphor Icons](https://phosphoricons.com) (MIT license).
+
+## Contributing
+
+Issues and pull requests are welcome. To run your own build, create your own Google OAuth client (see section 1); the published app's client ID isn't shared.
+
+## License
+
+All My Calendars is open source under the [MIT License](LICENSE). You can use, change and share the code, including in your own projects, as long as you keep the copyright and license notice.
