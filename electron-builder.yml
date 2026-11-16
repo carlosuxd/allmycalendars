@@ -11,6 +11,8 @@ files:
 compression: maximum
 electronLanguages:
   - en
+# Installer names without spaces, e.g. AllMyCalendars-1.1.3-mac-arm64.dmg
+artifactName: AllMyCalendars-${version}-${os}-${arch}.${ext}
 win:
   target: nsis
 nsis:

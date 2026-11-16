@@ -71,8 +71,8 @@ Builds never change the version: rebuilding gives the same number until you bump
 
 | Command | Output in `dist/` |
 | --- | --- |
-| `npm run build:mac` | `All My Calendars-x.y.z-arm64.dmg`, signed and notarized (Mac only) |
-| `npm run build:win` | `All My Calendars Setup x.y.z.exe` |
+| `npm run build:mac` | `AllMyCalendars-x.y.z-mac-arm64.dmg`, signed and notarized (Mac only) |
+| `npm run build:win` | `AllMyCalendars-x.y.z-win-<arch>.exe` |
 | `npm run typecheck` | Nothing; checks the TypeScript before you build |
 
 A typical release:
@@ -104,7 +104,7 @@ Launching the app from VS Code's terminal makes it quit right away, because VS C
 
 ### Updating the installed app (Windows)
 
-To update, double-click the new `dist\All My Calendars Setup x.y.z.exe`:
+To update, double-click the new `dist\AllMyCalendars-x.y.z-win-<arch>.exe`:
 there's no wizard and no need to uninstall first. It closes the running app (including from the tray), replaces it with the new version, and reopens it.
 Your accounts and settings are kept. You can delete older Setup files from `dist` whenever you like.
 
