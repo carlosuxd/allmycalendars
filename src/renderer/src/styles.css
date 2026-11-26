@@ -1,9 +1,16 @@
 :root {
   --bg: #ffffff;
-  --bg-soft: #f6f7f9;
+  --bg-soft: #f7f7f8;
   --bg-hover: #eef0f3;
   --border: #e4e6ea;
-  --line: #eff1f4;
+  --line: #f0f1f4;
+  --line-soft: #f5f6f8;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 2px rgb(16 24 40 / 0.05);
+  --shadow-md: 0 2px 8px rgb(16 24 40 / 0.1), 0 1px 2px rgb(16 24 40 / 0.06);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   --text: #1c2024;
   --muted: #6b7280;
   /* Button fills; white text on it is 5.1:1 */
@@ -28,10 +35,13 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #17181b;
-    --bg-soft: #1e2024;
+    --bg-soft: #1c1d21;
     --bg-hover: #26292e;
     --border: #2e3137;
     --line: #23262b;
+    --line-soft: #1e2024;
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 12px rgb(0 0 0 / 0.45), 0 1px 2px rgb(0 0 0 / 0.3);
     --text: #e8eaed;
     --muted: #9aa0a8;
     --accent: #5b85ff;
@@ -195,7 +205,8 @@ button:disabled {
   background: var(--bg);
   border: 1px solid var(--border);
   border-left: 4px solid var(--c);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
@@ -225,11 +236,12 @@ button:disabled {
   align-items: center;
   gap: 6px;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--line);
 }
 .toolbar h1 {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
+  letter-spacing: -0.01em;
   margin: 0 0 0 8px;
   min-width: 0;
   overflow: hidden;
@@ -238,6 +250,27 @@ button:disabled {
 }
 .toolbar > button {
   flex-shrink: 0;
+  border-radius: 999px;
+}
+.toolbar > button:not(.icon-btn) {
+  padding: 6px 14px;
+}
+.toolbar > .icon-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  transition: background 0.12s;
+}
+/* The range title changes softly when moving between weeks */
+.title-swap {
+  display: inline-block;
+  animation: title-in 0.22s var(--ease-out);
+}
+@keyframes title-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
 }
 .spacer {
   flex: 1;
@@ -277,30 +310,57 @@ button:disabled {
 .week-head,
 .allday-row {
   display: flex;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--line);
   padding-right: var(--scrollbar, 0px);
+}
+/* The day columns of each row; slides in when moving to other days */
+.days {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+}
+.days.slide-next {
+  animation: slide-from-right 0.22s var(--ease-out);
+}
+.days.slide-prev {
+  animation: slide-from-left 0.22s var(--ease-out);
+}
+@keyframes slide-from-right {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+@keyframes slide-from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
 }
 .day-head {
   flex: 1;
+  min-width: 0;
   display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 0 6px;
 }
 .dow {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 .dom {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
   width: 32px;
   height: 32px;
   display: inline-grid;
   place-items: center;
-  border-radius: 50%;
+  border-radius: 999px;
 }
 .day-head.today .dom {
   background: var(--accent);
@@ -327,9 +387,11 @@ button:disabled {
 }
 .chip {
   font-size: 12px;
-  padding: 2px 6px;
+  padding: 3px 8px;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
+  animation: fade-in 0.15s ease-out;
+  transition: box-shadow 0.12s;
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
@@ -340,21 +402,22 @@ button:disabled {
 }
 .chip:hover:not(:disabled) {
   background: var(--chip-bg);
-  box-shadow: inset 0 0 0 2px var(--chip-fg);
+  box-shadow: var(--shadow-md);
 }
 .chip.selected {
-  box-shadow: inset 0 0 0 2px var(--chip-fg);
+  box-shadow: inset 0 0 0 2px var(--chip-fg), var(--shadow-md);
 }
 
 .grid-scroll {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   scrollbar-gutter: stable;
 }
 .week-head,
 .allday-row {
   scrollbar-gutter: stable;
-  overflow-y: hidden;
+  overflow: hidden;
 }
 .grid {
   display: flex;
@@ -367,7 +430,8 @@ button:disabled {
   position: absolute;
   right: 8px;
   transform: translateY(-50%);
-  font-size: 11px;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
   color: var(--muted);
 }
 .day-col {
@@ -376,32 +440,40 @@ button:disabled {
   border-left: 1px solid var(--line);
   min-width: 0;
 }
+.day-col.weekend {
+  background: var(--bg-soft);
+}
 .day-col.today {
   background: color-mix(in srgb, var(--accent) 4%, transparent);
 }
-.hour-line {
+.hour-line,
+.half-line {
   position: absolute;
   left: 0;
   right: 0;
   border-top: 1px solid var(--line);
 }
+.half-line {
+  border-top: 1px dashed var(--line-soft);
+}
 .now-line {
   position: absolute;
   left: 0;
   right: 0;
-  border-top: 2px solid var(--now);
+  border-top: 1.5px solid var(--now);
   z-index: 3;
   pointer-events: none;
 }
 .now-line::before {
   content: '';
   position: absolute;
-  left: -5px;
-  top: -6px;
-  width: 10px;
-  height: 10px;
+  left: -4px;
+  top: -4.75px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--now);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--now) 22%, transparent);
 }
 
 .event {
@@ -411,10 +483,9 @@ button:disabled {
   flex-direction: column;
   align-items: flex-start;
   gap: 1px;
-  padding: 3px 6px;
+  padding: 4px 8px 4px 11px;
   border: none;
-  border-left: 3px solid var(--ev-border);
-  border-radius: 6px;
+  border-radius: 8px;
   /* Background and text colors are calculated in WeekView to always pass WCAG AA */
   background: var(--ev-bg);
   color: var(--ev-fg);
@@ -422,14 +493,46 @@ button:disabled {
   overflow: hidden;
   font-size: 12px;
   line-height: 1.25;
+  animation: fade-in 0.15s ease-out;
+  transition:
+    background 0.12s,
+    box-shadow 0.12s;
+}
+/* Rounded color bar inset on the left edge */
+.event::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  bottom: 3px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--ev-border);
+}
+.event.compact {
+  border-radius: var(--radius-sm);
+}
+.event.compact::before {
+  top: 2px;
+  bottom: 2px;
 }
 .event:hover:not(:disabled) {
   background: var(--ev-hover-bg);
+  box-shadow: var(--shadow-md);
   z-index: 2;
 }
-.event.selected {
-  box-shadow: 0 0 0 2px var(--c);
+.event.selected,
+.event.selected:hover:not(:disabled) {
+  box-shadow:
+    0 0 0 1px var(--bg),
+    0 0 0 3px var(--c),
+    var(--shadow-md);
   z-index: 2;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
 }
 .event.compact {
   flex-direction: row;
@@ -458,12 +561,77 @@ button:disabled {
 }
 
 /* Event details */
-.details {
-  width: 340px;
-  flex-shrink: 0;
-  border-left: 1px solid var(--border);
-  padding: 16px 20px;
+/* Soft blur behind the meeting popover; the selected meeting's card stays sharp above it */
+.popover-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 18;
+  background: rgb(255 255 255 / 0.25);
+  backdrop-filter: blur(4px);
+  animation: fade-in 0.18s ease-out;
+}
+@media (prefers-color-scheme: dark) {
+  .popover-backdrop {
+    background: rgb(0 0 0 / 0.3);
+  }
+}
+.event.selected,
+.chip.selected {
+  position: relative;
+  z-index: 19;
+}
+.event.selected {
+  position: absolute;
+}
+
+/* Meeting details: a card that pops up from the meeting clicked in the calendar */
+.event-popover {
+  position: fixed;
+  z-index: 20;
+  padding: 16px 18px 14px;
   overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 12px 32px rgb(16 24 40 / 0.16),
+    0 2px 6px rgb(16 24 40 / 0.08);
+  outline: none;
+  animation: popover-in 0.18s var(--ease-out);
+}
+@media (prefers-color-scheme: dark) {
+  .event-popover {
+    box-shadow:
+      0 12px 32px rgb(0 0 0 / 0.55),
+      0 2px 6px rgb(0 0 0 / 0.35);
+  }
+}
+.event-popover[data-side='right'] {
+  transform-origin: left top;
+}
+.event-popover[data-side='left'] {
+  transform-origin: right top;
+}
+.event-popover[data-side='below'] {
+  transform-origin: left top;
+}
+.event-popover[data-side='above'] {
+  transform-origin: left bottom;
+}
+@keyframes popover-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+.event-popover .details-head {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+.event-popover .details-title {
+  margin-top: 0;
+  padding-right: 32px;
 }
 .details-head {
   display: flex;
@@ -1031,17 +1199,6 @@ button.danger:hover:not(:disabled) {
   padding: 6px;
 }
 
-/* Event details over the calendar (window < 1100px) */
-.details.overlay {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 5;
-  width: min(360px, 100%);
-  background: var(--bg);
-  box-shadow: -4px 0 24px rgb(0 0 0 / 0.2);
-}
 
 .refresh-icon {
   display: inline-grid;
@@ -1059,8 +1216,14 @@ button.danger:hover:not(:disabled) {
 
 @media (prefers-reduced-motion: reduce) {
   .sidebar.drawer,
-  .spin {
-    animation: none;
+  .spin,
+  .days,
+  .title-swap,
+  .event,
+  .chip,
+  .event-popover,
+  .popover-backdrop {
+    animation: none !important;
   }
 }
 

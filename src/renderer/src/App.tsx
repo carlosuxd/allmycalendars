@@ -24,8 +24,6 @@ const MIN_DAY_PX = 130
 const GUTTER_PX = 56
 /** Below this window width the sidebar becomes a drawer opened from the header */
 const SIDEBAR_INLINE_MIN = 900
-/** Below this window width event details open over the calendar instead of beside it */
-const DETAILS_INLINE_MIN = 1100
 /** Below this window width the header uses compact labels */
 const COMPACT_HEADER_MAX = 700
 
@@ -84,7 +82,6 @@ export function App(): JSX.Element {
 
   const windowWidth = useWindowWidth()
   const narrow = windowWidth < SIDEBAR_INLINE_MIN
-  const detailsInline = windowWidth >= DETAILS_INLINE_MIN
   const compactHeader = windowWidth < COMPACT_HEADER_MAX
 
   // Close the drawer once the sidebar fits inline again
@@ -314,7 +311,11 @@ export function App(): JSX.Element {
           <button className="icon-btn" onClick={() => go(1)} aria-label={`Next ${span}`} title={`Next ${span}`}>
             <CaretRightIcon aria-hidden />
           </button>
-          <h1 title={fmtRangeTitle(days, false)}>{fmtRangeTitle(days, compactHeader)}</h1>
+          <h1 title={fmtRangeTitle(days, false)}>
+            <span key={fmtRangeTitle(days, compactHeader)} className="title-swap">
+              {fmtRangeTitle(days, compactHeader)}
+            </span>
+          </h1>
           <div className="spacer" />
           {result?.offline && (
             <span className="badge warn">{compactHeader ? 'Offline' : 'Offline · showing saved'}</span>
@@ -384,7 +385,6 @@ export function App(): JSX.Element {
               <EventDetails
                 event={selected}
                 account={accounts.find((a) => a.email === selected.accountEmail)}
-                overlay={!detailsInline}
                 onClose={() => setSelected(null)}
               />
             )}

@@ -81,6 +81,19 @@ export function WeekView({ days, events, accounts, selectedKey, onSelect }: Prop
   const scroller = useRef<HTMLDivElement>(null)
   const dark = useDarkMode()
 
+  // Slide direction for the day columns: only when moving to other days with the same count
+  // (not on first load, and not when a window resize changes how many days fit)
+  const first = days[0].getTime()
+  const prevRange = useRef({ first, count: days.length, dir: '' })
+  if (prevRange.current.first !== first || prevRange.current.count !== days.length) {
+    const sameCount = prevRange.current.count === days.length
+    const dir = sameCount ? (first > prevRange.current.first ? 'slide-next' : 'slide-prev') : ''
+    prevRange.current = { first, count: days.length, dir }
+  }
+  const slide = prevRange.current.dir
+  // Remounts the day wrappers so the slide animation plays again
+  const rangeKey = `${first}|${days.length}`
+
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000)
     return () => clearInterval(t)
@@ -98,16 +111,19 @@ export function WeekView({ days, events, accounts, selectedKey, onSelect }: Prop
     <div className="week">
       <div className="week-head">
         <div className="gutter" />
-        {days.map((d) => (
-          <div key={d.toISOString()} className={`day-head ${sameDay(d, now) ? 'today' : ''}`}>
-            <span className="dow">{d.toLocaleDateString(undefined, { weekday: 'short' })}</span>
-            <span className="dom">{d.getDate()}</span>
-          </div>
-        ))}
+        <div key={rangeKey} className={`days ${slide}`}>
+          {days.map((d) => (
+            <div key={d.toISOString()} className={`day-head ${sameDay(d, now) ? 'today' : ''}`}>
+              <span className="dow">{d.toLocaleDateString(undefined, { weekday: 'short' })}</span>
+              <span className="dom">{d.getDate()}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="allday-row">
         <div className="gutter label">all-day</div>
+        <div key={rangeKey} className={`days ${slide}`}>
         {days.map((d) => {
           const dayEvents = allDay.filter((e) => eventStart(e) <= d && eventEnd(e) > d)
           return (
@@ -118,6 +134,7 @@ export function WeekView({ days, events, accounts, selectedKey, onSelect }: Prop
                 return (
                   <button
                     key={e.key}
+                    data-event-key={e.key}
                     className={`chip ${selectedKey === e.key ? 'selected' : ''}`}
                     style={{ '--chip-bg': chip.bg, '--chip-fg': chip.fg, '--dot': dot } as CSSProperties}
                     onClick={() => onSelect(e)}
@@ -131,6 +148,7 @@ export function WeekView({ days, events, accounts, selectedKey, onSelect }: Prop
             </div>
           )
         })}
+        </div>
       </div>
 
       <div className="grid-scroll" ref={scroller}>
@@ -142,14 +160,19 @@ export function WeekView({ days, events, accounts, selectedKey, onSelect }: Prop
               </div>
             ))}
           </div>
+          <div key={rangeKey} className={`days ${slide}`}>
           {days.map((d) => {
             const dayEnd = d.getTime() + DAY_MS
             const dayEvents = timed.filter((e) => eventStart(e).getTime() < dayEnd && eventEnd(e).getTime() > d.getTime())
             const isToday = sameDay(d, now)
+            const weekend = d.getDay() === 0 || d.getDay() === 6
             return (
-              <div key={d.toISOString()} className={`day-col ${isToday ? 'today' : ''}`}>
+              <div key={d.toISOString()} className={`day-col ${isToday ? 'today' : ''} ${weekend ? 'weekend' : ''}`}>
                 {Array.from({ length: 24 }, (_, h) => (
-                  <div key={h} className="hour-line" style={{ top: h * HOUR_PX }} />
+                  <div key={h}>
+                    <div className="hour-line" style={{ top: h * HOUR_PX }} />
+                    <div className="half-line" style={{ top: h * HOUR_PX + HOUR_PX / 2 }} />
+                  </div>
                 ))}
                 {layoutDay(dayEvents, d).map(({ event: e, top, height, col, cols }) => {
                   const past = eventEnd(e) < now
@@ -159,13 +182,14 @@ export function WeekView({ days, events, accounts, selectedKey, onSelect }: Prop
                   return (
                     <button
                       key={e.key}
+                      data-event-key={e.key}
                       className={`event ${selectedKey === e.key ? 'selected' : ''} ${past ? 'past' : ''} ${compact ? 'compact' : ''}`}
                       style={
                         {
                           top,
                           height: height - 2,
                           left: `calc(${(col / cols) * 100}% + 2px)`,
-                          width: `calc(${100 / cols}% - 4px)`,
+                          width: `calc(${100 / cols}% - 5px)`,
                           '--c': e.color,
                           '--ev-bg': colors.bg,
                           '--ev-hover-bg': colors.hoverBg,
@@ -198,6 +222,7 @@ export function WeekView({ days, events, accounts, selectedKey, onSelect }: Prop
               </div>
             )
           })}
+          </div>
         </div>
       </div>
     </div>
